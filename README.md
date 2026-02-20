@@ -1,4 +1,4 @@
-# SAE501 – Entrepôt de données et agent IA pour le soutien scolaire ciblé
+# Plateforme - Entrepôt de données et agent IA pour le soutien scolaire ciblé
 
 ## Contexte
 Plateforme de soutien scolaire pair-a-pair qui met en relation etudiants et tuteurs. Le projet combine un portail web et une appli mobile, des services IA pour la recommandation et la moderation, et une couche data pour l’analyse et l’enrichissement des profils.
