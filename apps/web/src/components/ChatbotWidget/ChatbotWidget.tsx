@@ -4,7 +4,7 @@ import styles from "./ChatbotWidget.module.css";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
-const CHAT_ENDPOINT = "http://localhost:3006/api/chat";
+const CHAT_ENDPOINT = "/api/chat";
 const SITE_CONTEXT = `
 EduMate – Plateforme de mise en relation élèves/tuteurs.
 

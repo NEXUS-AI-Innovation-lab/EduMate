@@ -100,7 +100,7 @@ export interface LinkedInMeResponse {
 }
 
 class LinkedInService {
-  private baseURL = import.meta.env.VITE_CV_SERVICE_URL || 'http://localhost:5001';
+  private baseURL = import.meta.env.VITE_CV_SERVICE_URL || '/api/cv';
 
   private getAuthHeader(): Record<string, string> {
     const token = localStorage.getItem('token');
@@ -113,7 +113,7 @@ class LinkedInService {
    */
   loginWithLinkedIn(): void {
     console.log('🔗 Redirection vers LinkedIn pour authentification...');
-    window.location.href = `${this.baseURL}/api/linkedin/login`;
+    window.location.href = `${this.baseURL}/linkedin/login`;
   }
 
   /**
@@ -124,7 +124,7 @@ class LinkedInService {
     console.log('📝 Contenu texte (500 premiers caractères):', text.slice(0, 500));
 
     try {
-      const response = await fetch(`${this.baseURL}/api/linkedin/parse-text`, {
+      const response = await fetch(`${this.baseURL}/linkedin/parse-text`, {
         method: 'POST',
         headers: { ...this.getAuthHeader(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, language }),
@@ -152,7 +152,7 @@ class LinkedInService {
     console.log('🔄 Récupération des données LinkedIn depuis la session...');
 
     try {
-      const response = await fetch(`${this.baseURL}/api/linkedin/me?token=${encodeURIComponent(token)}`, {
+      const response = await fetch(`${this.baseURL}/linkedin/me?token=${encodeURIComponent(token)}`, {
         method: 'GET',
         headers: this.getAuthHeader(),
         credentials: 'include',

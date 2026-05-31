@@ -10,7 +10,7 @@ class ChatbotService {
         this.model = null;
         this.apiKey = null;
         this.embedModel = 'nomic-embed-text';
-        this.ragServiceUrl = process.env.RAG_SERVICE_URL || 'http://localhost:3005';
+        this.ragServiceUrl = process.env.RAG_SERVICE_URL || 'http://rag-service:3005';
         this.cache = new NodeCache({ stdTTL: 3600 });
         this.configManager = new AIConfigManager();
     }

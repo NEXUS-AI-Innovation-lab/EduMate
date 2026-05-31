@@ -34,7 +34,7 @@ export interface SemanticSearchResponse {
 }
 
 class RagService {
-  private ragApiUrl = 'http://localhost:3005';
+  private ragApiUrl = import.meta.env.VITE_RAG_SERVICE_URL || '/api/rag';
   private isRagAvailable = true;
   private lastHealthCheck = 0;
   private healthCheckInterval = 60000; // 60 secondes

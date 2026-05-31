@@ -45,7 +45,7 @@ const AdminPage = () => {
     fetchConfigs();
   }, []);
 
-  const API_URL = 'http://localhost:3001/api/ai-config/global';
+  const API_URL = '/api/ai-config/global';
 
   const fetchConfigs = async () => {
     try {

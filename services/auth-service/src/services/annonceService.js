@@ -298,7 +298,7 @@ class AnnonceService {
       const axios = require('axios');
       
       // Appeler RAG pour recherche sémantique
-      const ragResponse = await axios.get('http://localhost:3005/search/semantic', {
+      const ragResponse = await axios.get(`${process.env.RAG_SERVICE_URL || 'http://rag-service:3005'}/search/semantic`, {
         params: {
           q: query,
           level: filters.level,

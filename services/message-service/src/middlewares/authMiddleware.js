@@ -9,7 +9,7 @@ async function authMiddleware(req, res, next) {
   }
 
   try {
-    const response = await axios.get('http://localhost:3001/api/auth/check', {
+    const response = await axios.get(`${process.env.AUTH_SERVICE_URL || 'http://auth-service:3001'}/api/auth/check`, {
       headers: { Authorization: `Bearer ${token}` },
       validateStatus: () => true
     });
@@ -18,7 +18,7 @@ async function authMiddleware(req, res, next) {
       console.error('[Message-Service] Token invalide →', response.data.message);
 
       await axios.post(
-        'http://localhost:3001/api/auth/logout',
+        `${process.env.AUTH_SERVICE_URL || 'http://auth-service:3001'}/api/auth/logout`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       ).catch(() => {});

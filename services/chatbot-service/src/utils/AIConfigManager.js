@@ -23,7 +23,7 @@ class AIConfigManager {
             }
 
             // Charge la config IA depuis Auth Service (DB)
-            const apiUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
+            const apiUrl = process.env.AUTH_SERVICE_URL || 'http://auth-service:3001';
             const res = await axios.get(`${apiUrl}/api/ai-config/public/global`, { timeout: 3000 });
             const data = res.data?.data;
             if (!data || !data.apiKey || !data.modelName) {

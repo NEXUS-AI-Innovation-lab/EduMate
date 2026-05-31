@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 class AIConfigManager:
     def __init__(self, auth_service_url: str = None):
-        self.auth_service_url = auth_service_url or os.getenv('AUTH_SERVICE_URL', 'http://localhost:3001')
+        self.auth_service_url = auth_service_url or os.getenv('AUTH_SERVICE_URL', 'http://auth-service:3001')
         self.config_cache = {}
         self.cache_expiry = 5 * 60
         self.last_fetch = {}

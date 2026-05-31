@@ -100,7 +100,7 @@ const AnnoncesPage: React.FC = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
       
-      const response = await fetch('http://localhost:3001/api/profile', {
+      const response = await fetch('/api/profile', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       

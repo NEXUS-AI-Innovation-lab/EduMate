@@ -108,7 +108,7 @@ class AnnonceController {
           console.log('🔍 Requête nettoyée:', cleanedQuery, '← Original:', filters.subject);
           
           // 2. Appeler RAG avec la bonne URL
-          const ragResponse = await axios.get('http://localhost:3005/search/semantic', {
+          const ragResponse = await axios.get(`${process.env.RAG_SERVICE_URL || 'http://rag-service:3005'}/search/semantic`, {
             params: {
               q: cleanedQuery,
               level: filters.level,

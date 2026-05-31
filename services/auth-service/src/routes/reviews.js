@@ -4,7 +4,7 @@ const Review = require('../models/Review');
 const User = require('../models/User');
 const router = express.Router();
 
-const BLOCKCHAIN_BASE_URL = process.env.BLOCKCHAIN_SERVICE_URL || 'http://localhost:3003/api/blockchain';
+const BLOCKCHAIN_BASE_URL = process.env.BLOCKCHAIN_SERVICE_URL || 'http://blockchain-service:3003/api/blockchain';
 
 const getBookingDetails = async (bookingId) => {
   try {

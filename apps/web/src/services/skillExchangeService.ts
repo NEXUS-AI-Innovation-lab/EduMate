@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:3003/api/blockchain';
+const API_BASE_URL = '/api/blockchain';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

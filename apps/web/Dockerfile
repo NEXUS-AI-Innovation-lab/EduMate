@@ -1,6 +1,8 @@
 # Dockerfile for Web Application (React + Vite)
 # Multi-stage build
 
+# syntax=docker/dockerfile:1.7
+
 FROM node:20-alpine AS builder
 
 WORKDIR /app
@@ -8,8 +10,14 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install --legacy-peer-deps
+# Install dependencies with retry and cache support to survive transient registry resets
+RUN --mount=type=cache,target=/root/.npm \
+  npm config set fetch-retries 5 && \
+  npm config set fetch-retry-factor 2 && \
+  npm config set fetch-retry-mintimeout 20000 && \
+  npm config set fetch-retry-maxtimeout 120000 && \
+  npm config set maxsockets 1 && \
+  npm install --legacy-peer-deps --no-audit --no-fund --prefer-offline
 
 # Copy source
 COPY . .

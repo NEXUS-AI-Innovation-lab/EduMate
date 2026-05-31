@@ -2,7 +2,7 @@ const axios = require('axios');
 
 class PostgresService {
   constructor() {
-    this.authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
+    this.authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://auth-service:3001';
   }
 
   async getUserById(userId) {

@@ -143,7 +143,7 @@ const generateOfferFromSkills = async (skills: string[], rawText?: string): Prom
     
     console.log('📤 Envoi à l\'IA:', combinedSkills);
     
-    const response = await fetch('http://localhost:3001/api/annonces/generate-offer', {
+    const response = await fetch('/api/annonces/generate-offer', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -201,7 +201,7 @@ const retryWithFallback = async (skills: string[], rawText?: string): Promise<{t
   const token = localStorage.getItem('token');
   const combinedSkills = [...new Set(skills)].filter(s => s.trim().length > 0);
   
-  const descResponse = await fetch('http://localhost:3001/api/annonces/generate-offer', {
+  const descResponse = await fetch('/api/annonces/generate-offer', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -223,7 +223,7 @@ const retryWithFallback = async (skills: string[], rawText?: string): Promise<{t
     }
   }
   
-  const titleResponse = await fetch('http://localhost:3001/api/annonces/generate-title', {
+  const titleResponse = await fetch('/api/annonces/generate-title', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -1792,7 +1792,7 @@ const TransformSkillToAnnonceModal: React.FC<TransformSkillToAnnonceModalProps> 
       const token = localStorage.getItem('token');
       if (!token) return;
       
-      const response = await fetch('http://localhost:3001/api/annonces/my-annonces', {
+      const response = await fetch('/api/annonces/my-annonces', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -1841,7 +1841,7 @@ const TransformSkillToAnnonceModal: React.FC<TransformSkillToAnnonceModalProps> 
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:3001/api/annonces/test-extraction', {
+      const response = await fetch('/api/annonces/test-extraction', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2308,7 +2308,7 @@ const TransformSkillToAnnonceModal: React.FC<TransformSkillToAnnonceModalProps> 
           return;
         }
         
-        const response = await fetch('http://localhost:3001/api/profile', {
+        const response = await fetch('/api/profile', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -2323,7 +2323,7 @@ const TransformSkillToAnnonceModal: React.FC<TransformSkillToAnnonceModalProps> 
           
           const updatedSkillsToTeach = (currentProfile.skillsToTeach || []).filter((s: string) => s !== skill);
           
-          const saveResponse = await fetch('http://localhost:3001/api/profile/save', {
+          const saveResponse = await fetch('/api/profile/save', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -2437,7 +2437,7 @@ const TransformSkillToAnnonceModal: React.FC<TransformSkillToAnnonceModalProps> 
         return;
       }
       
-      const response = await fetch('http://localhost:3001/api/profile/save', {
+      const response = await fetch('/api/profile/save', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -2823,7 +2823,7 @@ const TransformSkillToAnnonceModal: React.FC<TransformSkillToAnnonceModalProps> 
         ...manualAddedSkills
       ])];
       
-      const skillResponse = await fetch('http://localhost:3001/api/profile/skills/add', {
+      const skillResponse = await fetch('/api/profile/skills/add', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

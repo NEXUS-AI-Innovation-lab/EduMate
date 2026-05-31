@@ -1,9 +1,5 @@
 # Docker Compose Configuration for EduMate (10 Services)
 # Network: edumate-network, Volumes: Named volumes for persistence
-# Version: 3.8
-
-version: "3.8"
-
 # ============================================
 # EduMate - Docker Compose Configuration
 # Multi-service orchestration
@@ -256,11 +252,11 @@ services:
       dockerfile: Dockerfile
     container_name: "edumate-web-app"
     environment:
-      VITE_API_BASE_URL: http://localhost:3001
-      VITE_BLOCKCHAIN_SERVICE_URL: http://localhost:3003
-      VITE_MESSAGE_SERVICE_URL: http://localhost:3002
-      VITE_CV_PARSER_SERVICE_URL: http://localhost:5001
-      VITE_RAG_SERVICE_URL: http://localhost:3005
+      VITE_API_URL: /api
+      VITE_BLOCKCHAIN_SERVICE_URL: /api/blockchain
+      VITE_MESSAGE_SERVICE_URL: /api/messages
+      VITE_CV_SERVICE_URL: /api/cv
+      VITE_RAG_SERVICE_URL: /api/rag
     ports:
       - "${WEB_APP_PORT:-5173}:5173"
     depends_on:

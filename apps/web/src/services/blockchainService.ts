@@ -4,8 +4,8 @@
 
 import axios from 'axios';
 
-const BLOCKCHAIN_BASE_URL = 'http://localhost:3003/api/blockchain';
-const AUTH_BASE_URL = 'http://localhost:3001/api';
+const BLOCKCHAIN_BASE_URL = '/api/blockchain';
+const AUTH_BASE_URL = '/api';
 
 const blockchainApi = axios.create({
   baseURL: BLOCKCHAIN_BASE_URL,
@@ -400,7 +400,7 @@ class BlockchainService {
 
   async testConnection(): Promise<boolean> {
     try {
-      const response = await blockchainApi.get('/test');
+      await blockchainApi.get('/test');
       return true;
     } catch (error) {
       return false;
@@ -408,7 +408,7 @@ class BlockchainService {
   }
 
   async checkHealth(): Promise<any> {
-    const response = await axios.get('http://localhost:3003/health');
+    const response = await axios.get('/api/blockchain/health');
     return response.data;
   }
 

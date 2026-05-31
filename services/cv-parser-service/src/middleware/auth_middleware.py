@@ -39,7 +39,7 @@ def auth_middleware(req):
         return jsonify({'success': False, 'message': 'Token manquant'}), 401
 
     token = auth_header.split(' ')[1] if ' ' in auth_header else auth_header
-    backend_url = os.getenv('BACKEND_URL', 'http://localhost:3001')
+    backend_url = os.getenv('BACKEND_URL', 'http://auth-service:3001')
 
     logger.debug(f"Token reçu: {token[:10]}...")  # cache partiel pour sécurité
 

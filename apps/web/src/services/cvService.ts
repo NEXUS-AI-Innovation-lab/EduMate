@@ -84,7 +84,7 @@ export interface CVMetadata {
 }
 
 class CVService {
-  private baseURL = import.meta.env.VITE_CV_SERVICE_URL || 'http://localhost:5001';
+  private baseURL = import.meta.env.VITE_CV_SERVICE_URL || '/api/cv';
 
   private getAuthHeader(): Record<string, string> {
     const token = localStorage.getItem('token');
@@ -107,7 +107,7 @@ class CVService {
     formData.append('language', language);
 
     try {
-      const response = await fetch(`${this.baseURL}/api/cv/parse`, {
+      const response = await fetch(`${this.baseURL}/parse`, {
         method: 'POST',
         body: formData,
         headers: this.getAuthHeader(),
@@ -146,7 +146,7 @@ class CVService {
     console.log('📝 Contenu texte (500 premiers caractères):', text.slice(0, 500));
 
     try {
-      const response = await fetch(`${this.baseURL}/api/cv/parse-text`, {
+      const response = await fetch(`${this.baseURL}/parse-text`, {
         method: 'POST',
         headers: { ...this.getAuthHeader(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, language }),
@@ -178,7 +178,7 @@ class CVService {
     formData.append('language', language);
 
     try {
-      const response = await fetch(`${this.baseURL}/api/cv/batch-parse`, {
+      const response = await fetch(`${this.baseURL}/batch-parse`, {
         method: 'POST',
         headers: this.getAuthHeader(),
         body: formData,

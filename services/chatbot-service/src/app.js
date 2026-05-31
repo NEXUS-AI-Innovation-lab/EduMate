@@ -86,7 +86,7 @@ const server = app.listen(PORT, () => {
     console.log(`🚀 Chatbot Service optimisé sur port ${PORT}`);
     console.log(`📡 LLM Provider: ${getPreferredProvider()}`);
     console.log(`⚡ Optimisations: Cache multi-niveaux, prompts adaptatifs`);
-    console.log(`🔗 RAG Service: ${process.env.RAG_SERVICE_URL || 'http://localhost:3005'}`);
+    console.log(`🔗 RAG Service: ${process.env.RAG_SERVICE_URL || 'http://rag-service:3005'}`);
 });
 
 // Arrêt gracieux

@@ -927,7 +927,7 @@ const GeneralInfoStep: React.FC<GeneralInfoStepProps> = ({
       // Sauvegarder dans la base de données via l'API
       const token = localStorage.getItem('token');
       if (token) {
-        await fetch('http://localhost:3001/api/profile/save', {
+        await fetch('/api/profile/save', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -958,7 +958,7 @@ const GeneralInfoStep: React.FC<GeneralInfoStepProps> = ({
       // Sauvegarder dans la base de données via l'API
       const token = localStorage.getItem('token');
       if (token) {
-        await fetch('http://localhost:3001/api/profile/save', {
+        await fetch('/api/profile/save', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
