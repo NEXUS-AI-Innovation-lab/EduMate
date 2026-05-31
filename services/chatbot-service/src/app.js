@@ -2,7 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+const { getPreferredProvider } = require('./utils/llmConfig');
 
 // Import CORRECT depuis le dossier services
 const chatbotService = require('./services/ChatbotService');
@@ -33,10 +35,11 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Routes de santé
 app.get('/health', (req, res) => {
+    const provider = getPreferredProvider();
     res.json({
         status: 'ok',
         service: 'Chatbot Service Optimisé',
-        llmProvider: process.env.LLM_PROVIDER || 'openrouter',
+        llmProvider: provider,
         optimizations: 'v2.0 - cache + prompts adaptatifs',
         timestamp: new Date().toISOString()
     });
@@ -81,7 +84,7 @@ app.use((req, res) => {
 // Démarrer le serveur
 const server = app.listen(PORT, () => {
     console.log(`🚀 Chatbot Service optimisé sur port ${PORT}`);
-    console.log(`📡 LLM Provider: ${process.env.LLM_PROVIDER || 'openrouter'}`);
+    console.log(`📡 LLM Provider: ${getPreferredProvider()}`);
     console.log(`⚡ Optimisations: Cache multi-niveaux, prompts adaptatifs`);
     console.log(`🔗 RAG Service: ${process.env.RAG_SERVICE_URL || 'http://localhost:3005'}`);
 });

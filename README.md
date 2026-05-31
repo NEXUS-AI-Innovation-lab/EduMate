@@ -6,7 +6,7 @@ La monnaie interne s’appelle **educoins** et sert aux echanges, reservations e
 
 ## Objectifs
 - Mettre en relation etudiants et tuteurs via web et mobile.
-- Proposer un agent IA pour recommandation, scoring et moderation.
+- Proposer un agent IA pour recommandation, scoring  et moderation.
 - Gerer les credits **educoins** (gains, depenses, conversion partielle).
 - Supporter des parcours collaboratifs (troc de competences, mentorat, sessions collectives).
 - Mettre en place un environnement technique complet avec CI/CD et data warehouse.

@@ -78,7 +78,7 @@ const ChatbotWidget: React.FC = () => {
         return () => window.removeEventListener("keydown", onKey);
     }, []);
 
-    // ⭐ Parser les liens - ÉVITE LES DOUBLONS
+    // Parser les liens - ÉVITE LES DOUBLONS
     const parseMessageWithLinks = (text: string) => {
       const lines = text.split('\n');
       const parts: React.ReactNode[] = [];
@@ -94,7 +94,7 @@ const ChatbotWidget: React.FC = () => {
         const sections = line.split(/(__[^_]+__)/);
         const lineParts: React.ReactNode[] = [];
         
-        // ⭐ Variable pour tracker si on a déjà ajouté un lien dans cette ligne
+        // Variable pour tracker si on a déjà ajouté un lien dans cette ligne
         let linkAddedInThisLine = false;
 
         sections.forEach((section) => {
@@ -118,9 +118,9 @@ const ChatbotWidget: React.FC = () => {
             // Vérifier si c'est un lien
             const linkMatch = part.match(/^\|tuteur\|(.+?)\|(.*)?\|$/);
             if (linkMatch) {
-              // ⭐ ÉVITER LES DOUBLONS : si un lien a déjà été ajouté dans cette ligne, on ignore
+              //si un lien a déjà été ajouté dans cette ligne, on ignore
               if (linkAddedInThisLine) {
-                console.log('🚫 Doublon de lien évité');
+                console.log('Doublon de lien évité');
                 return;
               }
               

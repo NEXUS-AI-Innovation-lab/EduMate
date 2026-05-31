@@ -1,5 +1,6 @@
 const { QdrantClient } = require('@qdrant/js-client-rest');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 
 const client = new QdrantClient({
   host: process.env.QDRANT_HOST || 'localhost',

@@ -1,6 +1,7 @@
 const axios = require('axios');
 const NodeCache = require('node-cache');
 const AIConfigManager = require('../utils/AIConfigManager');
+const { getPreferredProvider, normalizeProvider } = require('../utils/llmConfig');
 
 class ChatbotService {
     constructor() {
@@ -8,8 +9,7 @@ class ChatbotService {
         this.apiProvider = null;
         this.model = null;
         this.apiKey = null;
-        
-        this.embedModel = process.env.OLLAMA_EMBED_MODEL || 'nomic-embed-text';
+        this.embedModel = 'nomic-embed-text';
         this.ragServiceUrl = process.env.RAG_SERVICE_URL || 'http://localhost:3005';
         this.cache = new NodeCache({ stdTTL: 3600 });
         this.configManager = new AIConfigManager();
@@ -20,22 +20,17 @@ class ChatbotService {
      */
     async ensureConfig() {
         try {
-            // Récupérer UNIQUEMENT depuis la base de données
+            // Récupérer UNIQUEMENT depuis la base de données (Auth Service via configManager)
             const cfg = await this.configManager.getConfig('global');
-            
             if (!cfg) {
                 throw new Error('Configuration IA globale manquante');
             }
-
-            this.apiProvider = cfg.provider || 'openrouter';
+            this.apiProvider = normalizeProvider(cfg.provider) || getPreferredProvider();
             this.model = cfg.modelName;
             this.apiKey = cfg.apiKey;
-            
-            console.log(`✅ [Chatbot] Config chargée depuis DB: ${this.model} | ${this.apiKey.slice(0, 8)}...`);
-            
+            console.log(`✅ [Chatbot] Config chargée: ${this.model} | ${this.apiKey.slice(0, 8)}... | Provider: ${this.apiProvider}`);
         } catch (error) {
             console.error('❌ [Chatbot] Erreur chargement config:', error.message);
-            // Relancer l'erreur pour que le frontend voie le problème
             throw new Error(`Configuration IA globale manquante: Veuillez configurer l'IA dans la page Admin`);
         }
     }
@@ -190,7 +185,7 @@ class ChatbotService {
      */
     formatSingleTutorCard(tutor, number) {
         const tutorId = tutor.tutorId ? String(tutor.tutorId) : '';
-        const annonceIqwed = tutor.annonceId ? String(tutor.annonceId) : '';
+        const annonceId = tutor.annonceId ? String(tutor.annonceId) : '';
 
         let card = `${number}. __${tutor.name}__\n`;
 
@@ -214,7 +209,17 @@ class ChatbotService {
         if (tutor.level && tutor.level !== 'Non spécifié') {
             card += `Niveau : ${tutor.level}\n`;
         }
-        card += `Tarif : ${tutor.price}\n`;
+        // Remplacement strict de toute mention euro/€/EUR par 🪙
+        let price = tutor.price || '';
+        price = price.replace(/(\d+)\s*(€|euros|eur)/gi, '$1🪙');
+        price = price.replace(/€/g, '🪙');
+        price = price.replace(/euros?/gi, '🪙');
+        price = price.replace(/eur/gi, '🪙');
+        // Si le prix finit par /h, on garde, sinon on ajoute
+        if (!/🪙\s*\/h/i.test(price) && /🪙/.test(price)) {
+            price = price.replace(/🪙$/, '🪙/h');
+        }
+        card += `Tarif : ${price}\n`;
 
         if (tutor.location && tutor.location !== 'Non spécifié') {
             card += `📍 ${tutor.location}\n`;
@@ -293,14 +298,15 @@ class ChatbotService {
         try {
             console.log(`🔍 Appel RAG Service: ${this.ragServiceUrl}`);
 
+
             const originalQuery = options.originalQuery || message;
             const { subject, level, priceRange, location } = this.extractSearchParams(originalQuery);
 
+            // Recherche avec tous les critères
             const params = {
                 q: options.useRawQuery ? message : (subject || message),
-                limit: 2
+                limit: 5 // Augmente le nombre pour proposer plus de choix
             };
-
             if (level) params.level = level;
             if (priceRange?.max) params.maxPrice = priceRange.max;
             if (location) params.location = location;
@@ -327,14 +333,34 @@ class ChatbotService {
                 resultsCount: response.data?.data?.results?.length
             });
 
+            let tutors = [];
             if (response.data?.success && response.data?.data?.results?.length > 0) {
                 const results = response.data.data.results;
-
-                let tutors = results.map(t => {
+                tutors = results.map(t => {
                     const skills = Array.isArray(t.subjects) ? t.subjects :
                         t.subjects ? [t.subjects] :
                         t.description ? this.extractSkillsFromText(t.description) : [];
-
+                    // Nettoyage du champ price pour forcer 🪙/h
+                    let price = '';
+                    if (t.hourlyRate) {
+                        price = String(t.hourlyRate);
+                    } else if (t.price) {
+                        price = String(t.price);
+                    }
+                    if (price) {
+                        price = price.replace(/(\d+)\s*(€|euros|eur)/gi, '$1🪙');
+                        price = price.replace(/€/g, '🪙');
+                        price = price.replace(/euros?/gi, '🪙');
+                        price = price.replace(/eur/gi, '🪙');
+                        if (!/🪙\s*\/h/i.test(price) && /🪙/.test(price)) {
+                            price = price.replace(/🪙$/, '🪙/h');
+                        }
+                        if (!/🪙/.test(price)) {
+                            price = price + '🪙/h';
+                        }
+                    } else {
+                        price = 'Sur devis';
+                    }
                     return {
                         id: t.annonceId || t.tutorId,
                         name: t.tutorName || 'Tuteur EduMate',
@@ -342,7 +368,7 @@ class ChatbotService {
                         skills: skills,
                         rating: t.tutorRating || 0,
                         reviews: t.reviewsCount || Math.floor(Math.random() * 20) + 1,
-                        price: t.hourlyRate ? `${t.hourlyRate}€/h` : 'Sur devis',
+                        price: price,
                         level: t.level || 'Tous niveaux',
                         location: this.formatLocation(t.location),
                         teachingMode: this.formatTeachingMode(t.teachingMode),
@@ -351,28 +377,84 @@ class ChatbotService {
                         annonceId: t.annonceId
                     };
                 });
+            }
 
-                const payload = {
-                    found: tutors.length > 0,
-                    count: tutors.length,
-                    tutors: tutors,
-                    filters: { subject, level, location, priceRange }
+            // Si aucun tuteur exact, relancer une recherche élargie (sans niveau, sans ville, sans prix)
+            if (tutors.length === 0 && (level || location || priceRange)) {
+                console.log('🔄 Aucun tuteur exact, élargissement de la recherche...');
+                const paramsWide = {
+                    q: subject || message,
+                    limit: 5
                 };
-                this.cache.set(ragCacheKey, payload, 300);
-                return payload;
+                const responseWide = await axios.get(
+                    `${this.ragServiceUrl}/search/semantic`,
+                    {
+                        params: paramsWide,
+                        timeout: 1500
+                    }
+                );
+                if (responseWide.data?.success && responseWide.data?.data?.results?.length > 0) {
+                    tutors = responseWide.data.data.results.map(t => {
+                        const skills = Array.isArray(t.subjects) ? t.subjects :
+                            t.subjects ? [t.subjects] :
+                            t.description ? this.extractSkillsFromText(t.description) : [];
+                        // Nettoyage du champ price pour forcer 🪙/h
+                        let price = '';
+                        if (t.hourlyRate) {
+                            price = String(t.hourlyRate);
+                        } else if (t.price) {
+                            price = String(t.price);
+                        }
+                        if (price) {
+                            price = price.replace(/(\d+)\s*(€|euros|eur)/gi, '$1🪙');
+                            price = price.replace(/€/g, '🪙');
+                            price = price.replace(/euros?/gi, '🪙');
+                            price = price.replace(/eur/gi, '🪙');
+                            if (!/🪙\s*\/h/i.test(price) && /🪙/.test(price)) {
+                                price = price.replace(/🪙$/, '🪙/h');
+                            }
+                            if (!/🪙/.test(price)) {
+                                price = price + '🪙/h';
+                            }
+                        } else {
+                            price = 'Sur devis';
+                        }
+                        return {
+                            id: t.annonceId || t.tutorId,
+                            name: t.tutorName || 'Tuteur EduMate',
+                            subject: this.formatSubject(t.subjects || t.title || 'Cours'),
+                            skills: skills,
+                            rating: t.tutorRating || 0,
+                            reviews: t.reviewsCount || Math.floor(Math.random() * 20) + 1,
+                            price: price,
+                            level: t.level || 'Tous niveaux',
+                            location: this.formatLocation(t.location),
+                            teachingMode: this.formatTeachingMode(t.teachingMode),
+                            description: t.description || '',
+                            tutorId: t.tutorId,
+                            annonceId: t.annonceId
+                        };
+                    });
+                }
             }
 
-            if (options.useRawQuery && originalQuery !== message) {
-                console.log('⚠️ Aucun resultat avec requete etendue, fallback sur requete originale');
-                return await this.performRagSearch(originalQuery, intent, { useRawQuery: false, originalQuery });
+            let found = tutors.length > 0;
+            let messageInfo = '';
+            if (!found) {
+                messageInfo = "Je n'ai trouvé aucun tuteur correspondant à votre recherche précise. Essayez d'élargir vos critères ou contactez-nous pour une recommandation personnalisée.";
+            } else if (tutors.length > 0 && (level || location || priceRange)) {
+                messageInfo = "Voici les tuteurs les plus proches de vos critères (niveau, ville ou prix).";
             }
 
-            return {
-                found: false,
-                count: 0,
-                tutors: [],
-                filters: { subject, level, location, priceRange }
+            const payload = {
+                found,
+                count: tutors.length,
+                tutors,
+                filters: { subject, level, location, priceRange },
+                messageInfo
             };
+            this.cache.set(ragCacheKey, payload, 300);
+            return payload;
 
         } catch (error) {
             console.error('❌ Erreur RAG search:', error.message);
@@ -390,28 +472,16 @@ class ChatbotService {
         try {
             const systemPrompt = 'Tu es un assistant qui reformule une recherche de cours. Tu dois retourner un JSON valide et concis.';
             const userPrompt = `Reformule la demande utilisateur en une requete de recherche plus ciblée.\n\nDemande: "${message}"\n\nRetourne un JSON STRICT avec:\n{\n  "mainQuery": "...",\n  "relatedSubjects": ["...", "...", "..."]\n}\n\nRegles:\n- 1 a 3 sujets proches maximum\n- Langue: francais\n- Pas de texte hors JSON`;
-
-            const response = await axios.post(
-                'https://openrouter.ai/api/v1/chat/completions',
-                {
-                    model: this.model,
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: userPrompt }
-                    ],
-                    max_tokens: 80,
-                    temperature: 0.2
-                },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${this.apiKey}`,
-                        'Content-Type': 'application/json'
-                    },
-                    timeout: 1500
-                }
-            );
-
-            const raw = response.data?.choices?.[0]?.message?.content || '';
+            const raw = await this.callLanguageModel([
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt }
+            ], {
+                maxTokens: 800,
+                temperature: 0.2,
+                timeout: 1500,
+                cacheKey: `expand:${message.substring(0, 120)}`,
+                cacheTtl: 300
+            });
             const jsonMatch = raw.match(/\{[\s\S]*\}/);
             if (!jsonMatch) return message;
 
@@ -528,37 +598,130 @@ class ChatbotService {
     }
 
     buildSystemPrompt(context, ragResults, intent) {
-        return `# CONTEXTE
+          return `# CONTEXTE
 Tu es l'assistant IA d'EduMate, une plateforme de mise en relation élèves/tuteurs.
 
 ${context}
 
 # RÈGLES DE RÉPONSE STRICTES
 1. Pour le formatage:
-   - JAMAIS d'astérisques * ou **
-   - Utilise UNIQUEMENT __texte__ pour le gras
-   - Pas d'italique du tout
-   - Les listes utilisent des tirets -
+    - JAMAIS d'astérisques * ou **
+    - Utilise UNIQUEMENT __texte__ pour le gras
+    - Pas d'italique du tout
+    - Les listes utilisent des tirets -
 
 2. Pour les questions générales sur EduMate :
-   - Réponse naturelle et utile
-   - Propose l'étape suivante
-   - Utilise des listes à puces si plusieurs points
+    - Réponse naturelle et utile
+    - Propose l'étape suivante
+    - Utilise des listes à puces si plusieurs points
 
 3. IMPORTANT - Exemples :
-   - INCORRECT: *texte en italique* ou **texte gras**
-   - CORRECT: __texte en gras__
-   - INCORRECT: 🔹 *Créer des algorithmes*
-   - CORRECT: - __Créer des algorithmes__
+    - INCORRECT: *texte en italique* ou **texte gras**
+    - CORRECT: __texte en gras__
+    - INCORRECT: 🔹 *Créer des algorithmes*
+    - CORRECT: - __Créer des algorithmes__
 
 4. Structure pour le gras:
-   - Utilise __ avant et après le texte à mettre en gras
-   - Exemple: __Cette partie est en gras__
-   - Ne JAMAIS utiliser * ou **`;
+    - Utilise __ avant et après le texte à mettre en gras
+    - Exemple: __Cette partie est en gras__
+    - Ne JAMAIS utiliser * ou **
+
+5. MONNAIE :
+    - N'utilise JAMAIS euro, €, EUR ou etp dans tes réponses.
+    - Utilise UNIQUEMENT 🪙 (EduCoin) pour parler des crédits, tarifs ou prix.
+    - Exemple : "Tarif : 30🪙/h" ou "Le paiement se fait en 🪙 (EduCoin)".`;
+    }
+
+    async callLanguageModel(messages, options = {}) {
+        const provider = normalizeProvider(this.apiProvider) || getPreferredProvider();
+        const model = this.model || (provider === 'mistral'
+            ? (process.env.MISTRAL_MODEL || 'mistral-small-latest')
+            : (process.env.OPENROUTER_MODEL || 'qwen/qwen1.5-110b-chat'));
+        const apiKey = this.apiKey || (provider === 'mistral'
+            ? process.env.MISTRAL_API_KEY
+            : process.env.OPENROUTER_API_KEY);
+
+        if (!apiKey) {
+            throw new Error(`Clé API manquante pour ${provider}`);
+        }
+
+        const endpoint = provider === 'mistral'
+            ? 'https://api.mistral.ai/v1/chat/completions'
+            : 'https://openrouter.ai/api/v1/chat/completions';
+
+        const payload = {
+            model,
+            messages,
+            max_tokens: options.maxTokens ?? 800,
+            temperature: options.temperature ?? 0.3,
+            top_p: options.topP ?? 0.9
+        };
+
+        if (provider === 'mistral') {
+            payload.safe_prompt = true;
+        } else {
+            payload.top_k = options.topK ?? 40;
+            payload.frequency_penalty = options.frequencyPenalty ?? 0.1;
+            payload.presence_penalty = options.presencePenalty ?? 0.1;
+        }
+
+        const headers = {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+        };
+
+        if (provider !== 'mistral') {
+            headers['HTTP-Referer'] = options.httpReferer || 'http://localhost:5173';
+            headers['X-Title'] = options.title || 'EduMate Chatbot';
+        }
+
+        const startTime = Date.now();
+        const cacheKey = options.cacheKey || null;
+        const cacheTtl = options.cacheTtl ?? 1800;
+
+        if (cacheKey) {
+            const cached = this.cache.get(`${provider}:${model}:${cacheKey}`);
+            if (cached) {
+                console.log(`⚡ Réponse ${provider} depuis le cache (${Date.now() - startTime}ms)`);
+                return cached;
+            }
+        }
+
+        try {
+            console.log(`📡 Appel ${provider} (${model})`);
+
+            const response = await axios.post(endpoint, payload, {
+                headers,
+                timeout: options.timeout ?? 20000
+            });
+
+            let reply = response.data?.choices?.[0]?.message?.content || '';
+            const duration = Date.now() - startTime;
+            
+            // Remplacer les astérisques par du gras avec __
+            reply = reply.replace(/\*([^*]+?)\*/g, '__$1__');
+            reply = reply.replace(/\*\*([^*]+?)\*\*/g, '__$1__');
+            
+            if (cacheKey) {
+                this.cache.set(`${provider}:${model}:${cacheKey}`, reply, cacheTtl);
+            }
+            
+            console.log(`✅ Réponse reçue via ${provider} en ${duration}ms`);
+            return reply;
+            
+        } catch (error) {
+            console.error(`❌ ${provider} Error:`, error.response?.data || error.message);
+            
+            if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+                return "EduMate vous aide à trouver le tuteur idéal. Pour plus de détails, veuillez réessayer.";
+            }
+            
+            throw new Error(`Erreur ${provider}: ` + (error.response?.data?.error?.message || error.message));
+        }
     }
 
     /**
-     * Appelle OpenRouter
+     * Appelle le fournisseur LLM configuré.
      */
     async callOpenRouter(message, history, systemPrompt) {
         const messages = [
@@ -566,65 +729,14 @@ ${context}
             ...history.slice(-1).map(m => ({ role: m.role, content: m.content })),
             { role: 'user', content: message }
         ];
-        
-        try {
-            console.log(`📡 Appel OpenRouter (${this.model})`);
-            const startTime = Date.now();
-            
-            const cacheKey = `openrouter:${message.substring(0, 50)}`;
-            const cached = this.cache.get(cacheKey);
-            if (cached) {
-                console.log(`⚡ Réponse depuis le cache (${Date.now() - startTime}ms)`);
-                return cached;
-            }
-            
-            const response = await axios.post(
-                'https://openrouter.ai/api/v1/chat/completions',
-                {
-                    model: this.model,
-                    messages,
-                    max_tokens: 300,
-                    temperature: 0.3,
-                    top_p: 0.9,
-                    top_k: 40,
-                    frequency_penalty: 0.1,
-                    presence_penalty: 0.1,
-                    stop: ["\n\n", "User:", "Human:", "Assistant:"]
-                },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${this.apiKey}`,
-                        'HTTP-Referer': 'http://localhost:5173',
-                        'X-Title': 'EduMate Chatbot',
-                        'Content-Type': 'application/json'
-                    },
-                    timeout: 2500
-                }
-            );
-            
-            let reply = response.data.choices[0].message.content;
-            const duration = Date.now() - startTime;
-            
-            // Remplacer les astérisques par du gras avec __
-            reply = reply.replace(/\*([^*]+?)\*/g, '__$1__');
-            reply = reply.replace(/\*\*([^*]+?)\*\*/g, '__$1__');
-            
-            if (message.length < 100) {
-                this.cache.set(cacheKey, reply, 1800);
-            }
-            
-            console.log(`✅ Réponse reçue en ${duration}ms`);
-            return reply;
-            
-        } catch (error) {
-            console.error('❌ OpenRouter Error:', error.response?.data || error.message);
-            
-            if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-                return "EduMate vous aide à trouver le tuteur idéal. Pour plus de détails, veuillez réessayer.";
-            }
-            
-            throw new Error('Erreur OpenRouter: ' + (error.response?.data?.error?.message || error.message));
-        }
+
+        return await this.callLanguageModel(messages, {
+            cacheKey: `chat:${message.substring(0, 50)}:${systemPrompt.substring(0, 50)}`,
+            cacheTtl: message.length < 100 ? 1800 : 300,
+            maxTokens: 800,
+            temperature: 0.3,
+            timeout: 20000
+        });
     }
 
 }

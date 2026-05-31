@@ -7,7 +7,8 @@
 const sequelize = require('../config/database');
 const AIConfig = require('../models/AIConfig');
 const { User } = require('../models/associations');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 
 async function seedGlobalAIConfig() {
   try {

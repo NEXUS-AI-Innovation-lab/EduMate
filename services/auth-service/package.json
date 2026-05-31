@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@qdrant/js-client-rest": "^1.16.2",
+    "append-field": "^1.0.0",
     "axios": "^1.6.0",
     "bcryptjs": "^2.4.3",
     "compromise": "^14.11.0",

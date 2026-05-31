@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const sequelize = require('./config/database');
 require('./models/associations');
 const authRoutes = require('./routes/authRoutes');
@@ -9,7 +10,6 @@ const tutorRoutes = require('./routes/tutorRoutes');
 const annonceRoutes = require('./routes/annonceRoutes');
 const userRoutes = require('./routes/userRoutes');
 const reviewRoutes = require('./routes/reviews');
-const path = require('path');
 const aiConfigRoutes = require('./routes/aiConfigRoutes');
 const initializeAdmin = require('./scripts/initAdmin');
 const initializeGlobalConfig = require('./scripts/initGlobalConfig');

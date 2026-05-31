@@ -9,7 +9,7 @@ interface AIConfig {
   apiKey: string;
   provider: string;
   isActive: boolean;
-  notes?: string;
+  // notes supprimé
   createdAt: string;
   updatedAt: string;
   modifiedByUser?: {
@@ -24,7 +24,6 @@ interface FormData {
   modelName: string;
   apiKey: string;
   provider: string;
-  notes: string;
 }
 
 const AdminPage = () => {
@@ -35,9 +34,10 @@ const AdminPage = () => {
   const [formData, setFormData] = useState<FormData>({
     modelName: '',
     apiKey: '',
-    provider: 'openrouter',
-    notes: ''
+    provider: '',
   });
+  const [providerInput, setProviderInput] = useState('');
+  const [providerOptions, setProviderOptions] = useState<string[]>(['openrouter', 'ollama', 'deepseek', 'mistral', 'qwen', 'gemini', 'gpt', 'claude']);
 
   const token = localStorage.getItem('token');
 
@@ -109,10 +109,13 @@ const AdminPage = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    if (name === 'provider') {
+      setProviderInput(value);
+      setProviderOptions(['openrouter', 'ollama', 'deepseek', 'mistral', 'qwen', 'gemini', 'gpt', 'claude'].filter(opt => opt.toLowerCase().includes(value.toLowerCase())));
+      setFormData(prev => ({ ...prev, provider: value }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   
@@ -121,8 +124,8 @@ const AdminPage = () => {
       modelName: config.modelName,
       apiKey: config.apiKey,
       provider: config.provider,
-      notes: config.notes || ''
     });
+    setProviderInput(config.provider);
     setShowForm(true);
   };
 
@@ -131,9 +134,9 @@ const AdminPage = () => {
     setFormData({
       modelName: '',
       apiKey: '',
-      provider: 'openrouter',
-      notes: ''
+      provider: '',
     });
+    setProviderInput('');
   };
 
   const handleToggleStatus = async (newStatus: boolean) => {
@@ -199,12 +202,33 @@ const AdminPage = () => {
                 required
               >
                 <option value="openrouter">OpenRouter</option>
-                <option value="mistral">Mistral</option>
                 <option value="ollama">Ollama</option>
+                <option value="deepseek">DeepSeek</option>
+                <option value="mistral">Mistral</option>
+                <option value="qwen">Qwen</option>
+                <option value="gemini">Gemini</option>
+                <option value="gpt">GPT</option>
+                <option value="claude">Claude</option>
                 <option value="openai">OpenAI</option>
+                <option value="cohere">Cohere</option>
+                <option value="anthropic">Anthropic</option>
+                <option value="azure">Azure</option>
+                <option value="google">Google</option>
+                <option value="baidu">Baidu</option>
+                <option value="yandex">Yandex</option>
+                <option value="huggingface">HuggingFace</option>
+                <option value="palm">PaLM</option>
+                <option value="sagemaker">SageMaker</option>
+                <option value="vertexai">VertexAI</option>
+                <option value="databricks">Databricks</option>
+                <option value="aws">AWS</option>
+                <option value="ibm">IBM</option>
+                <option value="tencent">Tencent</option>
+                <option value="xunlei">Xunlei</option>
+                <option value="boson">Boson</option>
+                <option value="custom">Custom</option>
               </select>
             </div>
-
             <div className="form-group">
               <label>Modèle IA *</label>
               <input
@@ -216,7 +240,6 @@ const AdminPage = () => {
                 required
               />
             </div>
-
             <div className="form-group">
               <label>Clé API *</label>
               <input
@@ -228,18 +251,6 @@ const AdminPage = () => {
                 required
               />
             </div>
-
-            <div className="form-group">
-              <label>Notes (optionnel)</label>
-              <textarea
-                name="notes"
-                value={formData.notes}
-                onChange={handleInputChange}
-                placeholder="Notes ou commentaires sur cette configuration..."
-                rows={3}
-              />
-            </div>
-
             <div className="form-actions">
               <button type="submit" className="btn-success">
                 💾 Mettre à jour
@@ -286,12 +297,7 @@ const AdminPage = () => {
                       {config.apiKey.substring(0, 8)}...{config.apiKey.substring(config.apiKey.length - 4)}
                     </span>
                   </div>
-                  {config.notes && (
-                    <div className="detail-row">
-                      <span className="label">Notes:</span>
-                      <span className="value">{config.notes}</span>
-                    </div>
-                  )}
+                  {/* Notes supprimé */}
                   <div className="detail-row">
                     <span className="label">Dernier modifié:</span>
                     <span className="value">

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { getPreferredProvider } = require('../utils/llmConfig');
 
 // IMPORT CORRIGÉ : "./" car dans le même dossier src
 const chatbotService = require('../services/ChatbotService');
@@ -70,7 +71,7 @@ router.get('/chat/health', (req, res) => {
     res.json({
         status: 'ok',
         service: 'Chatbot',
-        provider: process.env.LLM_PROVIDER || 'openrouter',
+        provider: getPreferredProvider(),
         cacheSize: requestCache.size,
         timestamp: new Date().toISOString()
     });

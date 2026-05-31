@@ -15,7 +15,7 @@ class AITextProcessor {
      */
     async getOpenRouterConfig() {
         const apiKey = process.env.OPENROUTER_API_KEY;
-        const model = process.env.OPENROUTER_MODEL || 'qwen/qwen3.5-397b-a17b';
+        const model = process.env.OPENROUTER_MODEL || 'qwen/qwen3-14';
         
         if (!apiKey) {
             throw new Error('OPENROUTER_API_KEY manquante dans .env');
@@ -70,10 +70,10 @@ RÉPONSE EN JSON :
                 throw new Error('Clé API manquante dans la configuration');
             }
 
-      const response = await axios.post(
-        'https://openrouter.ai/api/v1/chat/completions',
-        {
-          model: 'qwen/qwen3-coder',
+            const response = await axios.post(
+              'https://openrouter.ai/api/v1/chat/completions',
+              {
+                model: 'qwen/qwen3-vl-8b-instruct',
           messages: [
             {
               role: 'system',
@@ -86,11 +86,11 @@ RÉPONSE EN JSON :
           ],
           temperature: 0.3,
           response_format: { type: "json_object" },
-          max_tokens: 800
+          max_tokens: 50
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+                  'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json'
           },
           timeout: 30000
@@ -148,8 +148,6 @@ Tu dois :
 4. RETOURNER UNIQUEMENT UN OBJET JSON VALIDE
 
 IMPORTANT POUR LE TITRE :
-- DOIT commencer par "Cours de...", "Formation en...", "Atelier de..."
-- JAMAIS utiliser "Professeur de...", "Enseignant de..."
 
 FORMAT DE RÉPONSE OBLIGATOIRE :
 {
@@ -164,10 +162,10 @@ FORMAT DE RÉPONSE OBLIGATOIRE :
                 throw new Error('Clé API manquante dans la configuration');
             }
 
-      const response = await axios.post(
-        'https://openrouter.ai/api/v1/chat/completions',
-        {
-          model: 'qwen/qwen3-coder',
+            const response = await axios.post(
+              'https://openrouter.ai/api/v1/chat/completions',
+              {
+                model: 'qwen/qwen3-vl-8b-instruct',
           messages: [
             {
               role: 'system',
@@ -184,11 +182,11 @@ TRÈS IMPORTANT : Le titre DOIT commencer par "Cours de...", "Formation en...". 
           ],
           temperature: 0.2,
           response_format: { type: "json_object" },
-          max_tokens: 800
+          max_tokens: 50
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+                  'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json'
           },
           timeout: 20000
@@ -229,11 +227,6 @@ TRÈS IMPORTANT : Le titre DOIT commencer par "Cours de...", "Formation en...". 
             const prompt = `Crée un titre professionnel pour un cours enseignant ces compétences : ${skillsList.join(', ')}
 
 Le titre doit être :
-- Accrocheur (max 60 caractères)
-- Professionnel
-- Intégrer les compétences principales
-- DOIT commencer par "Cours de...", "Formation en...", "Atelier de..."
-- JAMAIS utiliser "Professeur de...", "Enseignant de..."
 
 Réponds uniquement avec le titre.`;
 
@@ -243,10 +236,10 @@ Réponds uniquement avec le titre.`;
                 throw new Error('Clé API manquante dans la configuration');
             }
 
-      const response = await axios.post(
-        'https://openrouter.ai/api/v1/chat/completions',
-        {
-          model: 'qwen/qwen3-coder',
+            const response = await axios.post(
+              'https://openrouter.ai/api/v1/chat/completions',
+              {
+                model: 'qwen/qwen3-vl-8b-instruct',
           messages: [
             {
               role: 'system',
@@ -258,11 +251,11 @@ Réponds uniquement avec le titre.`;
             }
           ],
           temperature: 0.2,
-          max_tokens: 100
+          max_tokens: 50
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+                  'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json'
           },
           timeout: 10000
@@ -309,10 +302,10 @@ Réponds uniquement avec la description.`;
                 throw new Error('Clé API manquante dans la configuration');
             }
 
-      const response = await axios.post(
-        'https://openrouter.ai/api/v1/chat/completions',
-        {
-          model: 'qwen/qwen3-coder',
+            const response = await axios.post(
+              'https://openrouter.ai/api/v1/chat/completions',
+              {
+                model: 'qwen/qwen3-vl-8b-instruct',
           messages: [
             {
               role: 'system',
@@ -324,11 +317,11 @@ Réponds uniquement avec la description.`;
             }
           ],
           temperature: 0.3,
-          max_tokens: 500
+          max_tokens: 50
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+                  'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json'
           },
           timeout: 15000
