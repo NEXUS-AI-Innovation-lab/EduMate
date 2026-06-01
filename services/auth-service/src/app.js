@@ -92,7 +92,7 @@ const PORT = process.env.PORT || 3001;
 // Utilisation d'une IIFE async pour permettre l'utilisation de await
 (async () => {
   try {
-    await sequelize.sync({ alter: true });
+    await sequelize.sync();
     console.log('✅ Base de données connectée avec succès');
     console.log('📋 Tables disponibles:');
     console.log('   - users');
